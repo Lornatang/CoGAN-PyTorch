@@ -164,9 +164,10 @@ class Trainer(object):
                 # Set generator gradients to zero
                 self.generator.zero_grad()
 
-                output1, output2 = self.discriminator(fake1, fake2)
-                errG_input = self.adversarial_criterion(output1, real_label)
-                errG_target = self.adversarial_criterion(output2, real_label)
+                input_output, target_output = self.discriminator(fake1, fake2)
+                output = input_output + target_output
+                errG_input = self.adversarial_criterion(input_output, real_label)
+                errG_target = self.adversarial_criterion(target_output, real_label)
                 errG = errG_input + errG_target
                 errG.backward()
                 D_G_z2 = output.mean().item()
