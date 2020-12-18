@@ -138,7 +138,7 @@ class Trainer(object):
                 self.discriminator.zero_grad()
 
                 input_output, target_output = self.discriminator(input, target)
-                output = input_output + target_output
+                output = (input_output + target_output) / 2
                 errD_input_real = self.adversarial_criterion(input_output, real_label)
                 errD_target_real = self.adversarial_criterion(target_output, real_label)
                 errD_real = errD_input_real + errD_target_real
@@ -149,7 +149,7 @@ class Trainer(object):
                 noise = torch.randn(batch_size, 100, device=self.device)
                 fake1, fake2 = self.generator(noise)
                 input_output, target_output = self.discriminator(fake1.detach(), fake2.detach())
-                output = input_output + target_output
+                output = (input_output + target_output) / 2
                 errD_input_fake = self.adversarial_criterion(input_output, fake_label)
                 errD_target_fake = self.adversarial_criterion(target_output, fake_label)
                 errD_fake = errD_input_fake + errD_target_fake
@@ -165,7 +165,7 @@ class Trainer(object):
                 self.generator.zero_grad()
 
                 input_output, target_output = self.discriminator(fake1, fake2)
-                output = input_output + target_output
+                output = (input_output + target_output) / 2
                 errG_input = self.adversarial_criterion(input_output, real_label)
                 errG_target = self.adversarial_criterion(target_output, real_label)
                 errG = errG_input + errG_target
