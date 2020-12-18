@@ -139,9 +139,7 @@ class Trainer(object):
 
                 input_output, target_output = self.discriminator(input, target)
                 output = (input_output + target_output) / 2
-                errD_input_real = self.adversarial_criterion(input_output, real_label)
-                errD_target_real = self.adversarial_criterion(target_output, real_label)
-                errD_real = errD_input_real + errD_target_real
+                errD_real = self.adversarial_criterion(input_output, real_label) + self.adversarial_criterion(target_output, real_label)
                 errD_real.backward()
                 D_x = output.mean().item()
 
@@ -150,9 +148,7 @@ class Trainer(object):
                 fake1, fake2 = self.generator(noise)
                 input_output, target_output = self.discriminator(fake1.detach(), fake2.detach())
                 output = (input_output + target_output) / 2
-                errD_input_fake = self.adversarial_criterion(input_output, fake_label)
-                errD_target_fake = self.adversarial_criterion(target_output, fake_label)
-                errD_fake = errD_input_fake + errD_target_fake
+                errD_fake = self.adversarial_criterion(input_output, fake_label) + self.adversarial_criterion(target_output, fake_label)
                 errD_fake.backward()
                 D_G_z1 = output.mean().item()
                 errD = errD_real + errD_fake
@@ -166,9 +162,7 @@ class Trainer(object):
 
                 input_output, target_output = self.discriminator(fake1, fake2)
                 output = (input_output + target_output) / 2
-                errG_input = self.adversarial_criterion(input_output, real_label)
-                errG_target = self.adversarial_criterion(target_output, real_label)
-                errG = errG_input + errG_target
+                errG = self.adversarial_criterion(input_output, real_label) + self.adversarial_criterion(target_output, real_label)
                 errG.backward()
                 D_G_z2 = output.mean().item()
                 self.optimizer_g.step()
