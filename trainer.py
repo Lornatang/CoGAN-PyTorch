@@ -123,9 +123,10 @@ class Trainer(object):
             iterable = enumerate(zip(self.input_dataloader, self.target_dataloader))
             progress_bar = tqdm(iterable, total=len(self.input_dataloader))
             for i, (data1, data2) in progress_bar:
-                input = data1[0].to(self.device)
+                input = data1[0].type(torch.Tensor).expand(data1[0].size(0), args.channels, args.image_size, args.image_size)
+                input = input.to(self.device)
                 target = data2[0].to(self.device)
-                input = input.type(torch.Tensor).expand(input.size(0), args.channels, args.image_size, args.image_size)
+
                 batch_size = input.size(0)
                 real_label = torch.full((batch_size, 1), 1, dtype=input.dtype, device=self.device)
                 fake_label = torch.full((batch_size, 1), 0, dtype=input.dtype, device=self.device)
