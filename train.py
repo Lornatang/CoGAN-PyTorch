@@ -26,52 +26,40 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format="[ %(levelname)s ] %(message)s", level=logging.DEBUG)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Research and application of GAN based super resolution "
-                                                 "technology for pathological microscopic images.")
-    # basic parameters
-    parser.add_argument("--dataset", type=str, required=True,
-                        help="mnist.")
-    parser.add_argument("--dataroot", type=str, default="data",
-                        help="Path to dataset. (default: ``data``).")
-    parser.add_argument("-j", "--workers", default=4, type=int, metavar="N",
-                        help="Number of data loading workers. (default:4)")
-    parser.add_argument("--manualSeed", type=int, default=1111,
-                        help="Seed for initializing training. (default:1111)")
-    parser.add_argument("--device", default="",
-                        help="device id i.e. `0` or `0,1` or `cpu`. (default: ````).")
-
-    # log parameters
-    parser.add_argument("-s", "--save-freq", default=50, type=int,
-                        metavar="N", help="Save frequency. (default: 50).")
-
-    # model parameters
+    parser = argparse.ArgumentParser(description="An implementation of CoGAN algorithm using PyTorch framework.")
+    parser.add_argument("data", metavar="DIR",
+                        help="path to dataset")
     parser.add_argument("-a", "--arch", metavar="ARCH", default="mnist",
                         choices=model_names,
                         help="model architecture: " +
                              " | ".join(model_names) +
                              " (default: mnist)")
+    parser.add_argument("-j", "--workers", default=8, type=int, metavar="N",
+                        help="Number of data loading workers. (default:8)")
+    parser.add_argument("--start-iter", default=0, type=int, metavar="N",
+                        help="manual iter number (useful on restarts)")
+    parser.add_argument("--iters", default=50000, type=int, metavar="N",
+                        help="The number of iterations is needed in the training of model. (default: 50000)")
+    parser.add_argument("-b", "--batch-size", default=64, type=int, metavar="N",
+                        help="mini-batch size (default: 64), this is the total "
+                             "batch size of all GPUs on the current node when "
+                             "using Data Parallel or Distributed Data Parallel.")
+    parser.add_argument("--lr", type=float, default=0.0002,
+                        help="Learning rate. (default:0.0002)")
+    parser.add_argument("--image-size", type=int, default=32,
+                        help="The height / width of the input image to network. (default: 32).")
+    parser.add_argument("--channels", type=int, default=3,
+                        help="The number of channels of the image. (default: 3).")
     parser.add_argument("--pretrained", dest="pretrained", action="store_true",
                         help="Use pre-trained model.")
     parser.add_argument("--netD", default="", type=str, metavar="PATH",
                         help="Path to latest discriminator checkpoint. (default: ````).")
     parser.add_argument("--netG", default="", type=str, metavar="PATH",
                         help="Path to latest generator checkpoint. (default: ````).")
-
-    # training parameters
-    parser.add_argument("--start-epoch", default=0, type=int, metavar="N",
-                        help="manual epoch number (useful on restarts)")
-    parser.add_argument("--iters", default=25000, type=int, metavar="N",
-                        help="The number of iterations is needed in the training of model. (default: 25000)")
-    parser.add_argument("-b", "--batch-size", default=128, type=int, metavar="N",
-                        help="mini-batch size (default: 128), this is the total "
-                             "batch size of all GPUs on the current node when "
-                             "using Data Parallel or Distributed Data Parallel.")
-    parser.add_argument("--image-size", type=int, default=32,
-                        help="The height / width of the input image to network. (default: 32).")
-    parser.add_argument("--channels", type=int, default=3,
-                        help="The number of channels of the image. (default: 3).")
-    parser.add_argument("--lr", type=float, default=2e-4,
-                        help="Learning rate. (default:2e-4)")
+    parser.add_argument("--manualSeed", type=int, default=1111,
+                        help="Seed for initializing training. (default:1111)")
+    parser.add_argument("--device", default="0",
+                        help="device id i.e. `0` or `0,1` or `cpu`. (default: ``0``).")
     args = parser.parse_args()
 
     print("##################################################\n")

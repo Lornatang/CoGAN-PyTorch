@@ -12,6 +12,7 @@
 # limitations under the License.
 # ==============================================================================
 import logging
+import math
 import os
 
 import torch.nn as nn
@@ -21,9 +22,9 @@ import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from tqdm import tqdm
 
+import cogan_pytorch.datasets
 import cogan_pytorch.models as models
 from cogan_pytorch.models import discriminator
-import cogan_pytorch.datasets
 from cogan_pytorch.utils import init_torch_seeds
 from cogan_pytorch.utils import select_device
 from cogan_pytorch.utils import weights_init
@@ -45,13 +46,13 @@ class Trainer(object):
 
         logger.info("Load training dataset")
         # Selection of appropriate treatment equipment.
-        input_dataset = torchvision.datasets.MNIST(root=args.dataroot, download=True,
+        input_dataset = torchvision.datasets.MNIST(root=args.data, download=True,
                                                    transform=transforms.Compose([
                                                        transforms.Resize(args.image_size),
                                                        transforms.ToTensor(),
                                                        transforms.Normalize((0.5,), (0.5,))
                                                    ]))
-        target_dataset = cogan_pytorch.datasets.MNISTM(root=f"{args.dataroot}/MNIST", download=False,
+        target_dataset = cogan_pytorch.datasets.MNISTM(root=f"{args.data}/MNIST", download=True,
                                                        transform=transforms.Compose([
                                                            transforms.Resize(args.image_size),
                                                            transforms.ToTensor(),
@@ -67,7 +68,7 @@ class Trainer(object):
                                                              num_workers=int(args.workers))
 
         logger.info(f"Train Dataset information:\n"
-                    f"\tTrain Dataset dir is `{os.getcwd()}/{args.dataroot}`\n"
+                    f"\tTrain Dataset dir is `{os.getcwd()}/{args.data}`\n"
                     f"\tBatch size is {args.batch_size}\n"
                     f"\tWorkers is {int(args.workers)}\n"
                     f"\tLoad dataset to CUDA")
@@ -90,7 +91,8 @@ class Trainer(object):
         self.discriminator = self.discriminator.apply(weights_init)
 
         # Parameters of pre training model.
-        self.epochs = int(int(args.iters) // len(self.input_dataloader))
+        self.start_epoch = math.floor(args.start_iter / len(self.input_dataloader))
+        self.epochs = math.ceil(args.iters / len(self.input_dataloader))
         self.optimizer_g = torch.optim.Adam(self.generator.parameters(), lr=args.lr, betas=(0.5, 0.999))
         self.optimizer_d = torch.optim.Adam(self.discriminator.parameters(), lr=args.lr, betas=(0.5, 0.999))
 
@@ -119,7 +121,7 @@ class Trainer(object):
 
         fixed_noise = torch.randn(args.batch_size, 100, device=self.device)
 
-        for epoch in range(args.start_epoch, self.epochs):
+        for epoch in range(self.start_epoch, self.epochs):
             iterable = enumerate(zip(self.input_dataloader, self.target_dataloader))
             progress_bar = tqdm(iterable, total=len(self.input_dataloader))
             for i, (data1, data2) in progress_bar:
@@ -172,13 +174,21 @@ class Trainer(object):
                                              f"Loss_D: {errD.item():.6f} Loss_G: {errG.item():.6f} "
                                              f"D(x): {D_x:.6f} D(G(z)): {D_G_z1:.6f}/{D_G_z2:.6f}")
 
+                iters = i + epoch * len(self.input_dataloader) + 1
                 # The image is saved every 1 epoch.
-                if (i + 1) % args.save_freq == 0:
-                    vutils.save_image(input, os.path.join("output", "real_samples.bmp"))
+                if (i + 1) % 1000 == 0:
+                    vutils.save_image(input,
+                                      os.path.join("output", "real_samples.png"),
+                                      normalize=True)
                     fake1, fake2 = self.generator(fixed_noise)
                     fake = torch.cat([fake1.data, fake2.data], dim=0)
-                    vutils.save_image(fake.detach(), os.path.join("output", f"fake_samples{epoch + 1}.bmp"))
+                    vutils.save_image(fake.detach(),
+                                      os.path.join("output", f"fake_samples_{iters}.png"),
+                                      normalize=True)
 
-            # do checkpointing
-            torch.save(self.generator.state_dict(), f"weights/netG_epoch_{epoch + 1}.pth")
-            torch.save(self.discriminator.state_dict(), f"weights/netD_epoch_{epoch + 1}.pth")
+                    # do checkpointing
+                    torch.save(self.generator.state_dict(), f"weights/{args.arch}_G_iter_{iters}.pth")
+                    torch.save(self.discriminator.state_dict(), f"weights/{args.arch}_D_iter_{iters}.pth")
+
+                if iters == int(args.iters):  # If the iteration is reached, exit.
+                    break

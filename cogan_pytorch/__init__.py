@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-__version__ = "0.1.0"
-
+from .datasets import *
 from .models import *
 from .utils import *
-from .datasets import *
+
+__version__ = "0.1.0"

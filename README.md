@@ -3,7 +3,7 @@
 ### Overview
 
 This repository contains an op-for-op PyTorch reimplementation
-of [Coupled Generative Adversarial Networks](http://xxx.itp.ac.cn/pdf/1606.07536v2).
+of [Coupled Generative Adversarial Networks](http://xxx.itp.ac.cn/pdf/1606.07536).
 
 ### Table of contents
 
@@ -13,6 +13,8 @@ of [Coupled Generative Adversarial Networks](http://xxx.itp.ac.cn/pdf/1606.07536
     * [Clone and install requirements](#clone-and-install-requirements)
     * [Download pretrained weights](#download-pretrained-weights-eg-mnist)
 4. [Test](#test)
+    * [Torch Hub call](#torch-hub-call)
+    * [Base call](#base-call)
 5. [Train](#train-eg-mnist)
 6. [Contributing](#contributing)
 7. [Credit](#credit)
@@ -57,19 +59,46 @@ $ python3 download_weights.py
 
 ### Test
 
+#### Torch hub call
+
+```python
+# Using Torch Hub library.
+import torch
+import torchvision.utils as vutils
+
+# Choose to use the device.
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+# Load the model into the specified device.
+model = torch.hub.load("Lornatang/CoGAN-PyTorch", "mnist", pretrained=True, progress=True, verbose=False)
+model.eval()
+model = model.to(device)
+
+# Create random noise image.
+num_images = 64
+noise = torch.randn(num_images, 100, device=device)
+
+# The noise is input into the generator model to generate the image.
+with torch.no_grad():
+    generated_images = model(noise)
+
+# Save generate image.
+vutils.save_image(generated_images, "mnist.png", normalize=True)
+```
+
+#### Base call
+
 Using pre training model to generate pictures.
 
 ```text
 usage: test.py [-h] [-a ARCH] [-n NUM_IMAGES] [--outf PATH] [--device DEVICE]
 
-Research and application of GAN based super resolution technology for
-pathological microscopic images.
+An implementation of CoGAN algorithm using PyTorch framework.
 
 optional arguments:
   -h, --help            show this help message and exit
-  -a ARCH, --arch ARCH  model architecture: _gan | cifar10 | discriminator |
-                        fashion_mnist | load_state_dict_from_url | mnist
-                        (default: mnist)
+  -a ARCH, --arch ARCH  model architecture: _gan | discriminator |
+                        load_state_dict_from_url | mnist (default: mnist)
   -n NUM_IMAGES, --num-images NUM_IMAGES
                         How many samples are generated at one time. (default:
                         64).
@@ -79,66 +108,63 @@ optional arguments:
                         ``cpu``).
 
 # Example (e.g. MNIST)
-$ python3 test.py -a mnist
+$ python3 test.py -a mnist --device cpu
 ```
-
-<span align="center"><img src="assets/mnist.gif" alt="">
-</span>
 
 ### Train (e.g. MNIST)
 
 ```text
-usage: train.py [-h] --dataset DATASET [--dataroot DATAROOT] [-j N]
-                [--manualSeed MANUALSEED] [--device DEVICE] [-p N] [-a ARCH]
-                [--model-path PATH] [--pretrained] [--netD PATH] [--netG PATH]
-                [--start-epoch N] [--iters N] [-b N] [--image-size IMAGE_SIZE]
-                [--channels CHANNELS] [--lr LR]
+usage: train.py [-h] [-a ARCH] [-j N] [--start-iter N] [--iters N] [-b N]
+                [--lr LR] [--image-size IMAGE_SIZE] [--channels CHANNELS]
+                [--pretrained] [--netD PATH] [--netG PATH]
+                [--manualSeed MANUALSEED] [--device DEVICE]
+                DIR
 
-Research and application of GAN based super resolution technology for
-pathological microscopic images.
+An implementation of CoGAN algorithm using PyTorch framework.
+
+positional arguments:
+  DIR                   path to dataset
 
 optional arguments:
   -h, --help            show this help message and exit
-  --dataset DATASET     mnist | fashion-mnist | cifar10 |.
-  --dataroot DATAROOT   Path to dataset. (default: ``data``).
-  -j N, --workers N     Number of data loading workers. (default:4)
-  --manualSeed MANUALSEED
-                        Seed for initializing training. (default:1111)
-  --device DEVICE       device id i.e. `0` or `0,1` or `cpu`. (default: ````).
-  -p N, --save-freq N   Save frequency. (default: 50).
-  -a ARCH, --arch ARCH  model architecture: cifar10 | discriminator | fashion-mnist |
-                        mnist (default: mnist)
-  --model-path PATH     Path to latest checkpoint for model. (default: ````).
+  -a ARCH, --arch ARCH  model architecture: _gan | discriminator |
+                        load_state_dict_from_url | mnist (default: mnist)
+  -j N, --workers N     Number of data loading workers. (default:8)
+  --start-iter N        manual iter number (useful on restarts)
+  --iters N             The number of iterations is needed in the training of
+                        model. (default: 50000)
+  -b N, --batch-size N  mini-batch size (default: 64), this is the total batch
+                        size of all GPUs on the current node when using Data
+                        Parallel or Distributed Data Parallel.
+  --lr LR               Learning rate. (default:0.0002)
+  --image-size IMAGE_SIZE
+                        The height / width of the input image to network.
+                        (default: 32).
+  --channels CHANNELS   The number of channels of the image. (default: 3).
   --pretrained          Use pre-trained model.
   --netD PATH           Path to latest discriminator checkpoint. (default:
                         ````).
   --netG PATH           Path to latest generator checkpoint. (default: ````).
-  --start-epoch N       manual epoch number (useful on restarts)
-  --iters N             The number of iterations is needed in the training of
-                        PSNR model. (default: 1e5)
-  -b N, --batch-size N  mini-batch size (default: 64), this is the total batch
-                        size of all GPUs on the current node when using Data
-                        Parallel or Distributed Data Parallel.
-  --image-size IMAGE_SIZE
-                        The height / width of the input image to network.
-                        (default: 28).
-  --channels CHANNELS   The number of channels of the image. (default: 1).
-  --lr LR               Learning rate. (default:3e-4)
-
+  --manualSeed MANUALSEED
+                        Seed for initializing training. (default:1111)
+  --device DEVICE       device id i.e. `0` or `0,1` or `cpu`. (default:
+                        ``0``).
+                        
 # Example (e.g. MNIST)
-$ python3 train.py -a mnist --dataset mnist --image-size 28 --channels 1 --pretrained
+$ python3 train.py data -a mnist --image-size 32 --channels 3 --pretrained --device 0
 ```
 
 If you want to load weights that you've trained before, run the following command.
 
 ```bash
-$ python3 train.py -a mnist \
-                   --dataset mnist \
-                   --image-size 28 \
-                   --channels 1 \
-                   --start-epoch 18 \
-                   --netG weights/netG_epoch_18.pth \
-                   --netD weights/netD_epoch_18.pth
+$ python3 train.py data \
+                   -a mnist \
+                   --image-size 32 \
+                   --channels 3 \
+                   --start-iter 10000 \
+                   --netG weights/mnist_G_iter_10000.pth \
+                   --netD weights/mnist_D_iter_10000.pth \
+                   --device 0
 ```
 
 ### Contributing
@@ -150,30 +176,28 @@ I look forward to seeing what the community does with these models!
 
 ### Credit
 
-#### Generative Adversarial Networks
+#### Coupled Generative Adversarial Networks
 
-*Ian J. Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, Yoshua
-Bengio*
+*Ming-Yu Liu, Oncel Tuzel*
 
 **Abstract**
 
-We propose a new framework for estimating generative models via an adversarial process, in which we simultaneously train
-two models: a generative model G that captures the data distribution, and a discriminative model D that estimates the
-probability that a sample came from the training data rather than G. The training procedure for G is to maximize the
-probability of D making a mistake. This framework corresponds to a minimax two-player game. In the space of arbitrary
-functions G and D, a unique solution exists, with G recovering the training data distribution and D equal to 1/2
-everywhere. In the case where G and D are defined by multilayer perceptrons, the entire system can be trained with
-backpropagation. There is no need for any Markov chains or unrolled approximate inference networks during either
-training or generation of samples. Experiments demonstrate the potential of the framework through qualitative and
-quantitative evaluation of the generated samples.
+We propose coupled generative adversarial network (CoGAN) for learning a joint distribution of multi-domain images. In
+contrast to the existing approaches, which require tuples of corresponding images in different domains in the training
+set, CoGAN can learn a joint distribution without any tuple of corresponding images. It can learn a joint distribution
+with just samples drawn from the marginal distributions. This is achieved by enforcing a weight-sharing constraint that
+limits the network capacity and favors a joint distribution solution over a product of marginal distributions one. We
+apply CoGAN to several joint distribution learning tasks, including learning a joint distribution of color and depth
+images, and learning a joint distribution of face images with different attributes. For each task it successfully learns
+the joint distribution without any tuple of corresponding images. We also demonstrate its applications to domain
+adaptation and image transformation.
 
-[[Paper]](http://xxx.itp.ac.cn/pdf/1606.07536v2) [[Authors' Implementation]](https://github.com/mingyuliutw/cogan)
+[[Paper]](http://xxx.itp.ac.cn/pdf/1606.07536)
 
 ```
-@article{adversarial,
-  title={Generative Adversarial Networks},
-  author={Ian J. Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, Yoshua Bengio},
-  journal={nips},
-  year={2014}
+@misc{1606.07536,
+Author = {Ming-Yu Liu and Oncel Tuzel},
+Title = {Coupled Generative Adversarial Networks},
+Year = {2016},
+Eprint = {arXiv:1606.07536},
 }
-```

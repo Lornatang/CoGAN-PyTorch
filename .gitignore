@@ -131,10 +131,15 @@ dmypy.json
 
 # custom
 data/MNIST
-data/FashionMNIST
+data/TFD
 data/cifar-10-python
 data/cifar-10-python.tar.gz
 data/cifar-10-batches-py
 
 output
-weights/*.pth
+test
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.pth
