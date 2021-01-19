@@ -21,7 +21,7 @@ __all__ = [
 ]
 
 model_urls = {
-    "mnist": "https://github.com/Lornatang/CoGAN-PyTorch/releases/download/0.1.0/CoGAN_mnist-845ad82d.pth",
+    "mnist": None
 }
 
 

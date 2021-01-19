@@ -31,7 +31,7 @@ from torch.hub import load_state_dict_from_url
 from cogan_pytorch.models import Generator
 
 model_urls = {
-    "mnist": "https://github.com/Lornatang/CoGAN-PyTorch/releases/download/0.1.0/CoGAN_mnist-03265dde.pth"
+    "mnist": None
 }
 
 dependencies = ["torch"]
