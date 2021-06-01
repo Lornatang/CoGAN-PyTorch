@@ -11,9 +11,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from .activation import *
-from .datasets import *
-from .models import *
-from .utils import *
-
-__version__ = "0.2.0"
+from .generator import cogan

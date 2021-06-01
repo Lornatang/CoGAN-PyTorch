@@ -1,4 +1,4 @@
-# Copyright 2020 Dakewe Biotech Corporation. All Rights Reserved.
+# Copyright 2021 Dakewe Biotech Corporation. All Rights Reserved.
 # Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
 #   You may obtain a copy of the License at
@@ -15,23 +15,15 @@
 """File for accessing GAN via PyTorch Hub https://pytorch.org/hub/
 Usage:
     import torch
-    import torchvision.utils as vutils
-
-    # Choose to use the device.
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
-    # Load the model into the specified device.
-    model = torch.hub.load("Lornatang/CoGAN-PyTorch", "mnist", pretrained=True, progress=True, verbose=False)
-    model.eval()
-    model = model.to(device)
+    model = torch.hub.load("Lornatang/CoGAN-PyTorch", "cogan", pretrained=True, progress=True, verbose=False)
 """
 import torch
 from torch.hub import load_state_dict_from_url
 
-from cogan_pytorch.models import Generator
+from cogan_pytorch.models.generator import Generator
 
 model_urls = {
-    "mnist": "https://github.com/Lornatang/CoGAN-PyTorch/releases/download/0.1.0/CoGAN_mnist-e0851344.pth"
+    "cogan": "https://github.com/Lornatang/CoGAN-PyTorch/releases/download/v0.2.0/CoGAN_MNIST-e34956dece484d6c754798e8a6a8fe524aa790e4cf2e0d2918048f811c4a76ad.pth",
 }
 
 dependencies = ["torch"]
@@ -52,18 +44,16 @@ def create(arch, image_size, channels, pretrained, progress):
     """
     model = Generator(image_size, channels)
     if pretrained:
-        state_dict = load_state_dict_from_url(model_urls[arch],
-                                              progress=progress,
-                                              map_location=torch.device("cpu"))
+        state_dict = load_state_dict_from_url(model_urls[arch], progress=progress, map_location=torch.device("cpu"))
         model.load_state_dict(state_dict)
     return model
 
 
-def mnist(pretrained: bool = False, progress: bool = True) -> Generator:
-    r"""GAN model architecture from the
-    `"One weird trick..." <https://arxiv.org/abs/1606.07536v2>`_ paper.
+def cogan(pretrained: bool = False, progress: bool = True) -> Generator:
+    r"""GAN model architecture from the `"One weird trick..." <https://arxiv.org/abs/1406.2661>` paper.
+
     Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-        progress (bool): If True, displays a progress bar of the download to stderr
+        pretrained (bool): If True, returns a model pre-trained on ImageNet.
+        progress (bool): If True, displays a progress bar of the download to stderr.
     """
-    return create("mnist", 32, 3, pretrained, progress)
+    return create("cogan", 32, 3, pretrained, progress)
